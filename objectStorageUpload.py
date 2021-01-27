@@ -37,7 +37,7 @@ target_region_names = []
 
 config = oci.config.from_file(configfile, profile)
 tenancy_id = config['tenancy']
-zipname = 'QBData' + date.today().strftime('%d_%m_%Y')
+zipname = 'backup' + date.today().strftime('%d_%m_%Y') #TODO: for different end zip file name (currently "backup{today's date}.zip")
 
 signer = Signer(
     tenancy = config['tenancy'],
