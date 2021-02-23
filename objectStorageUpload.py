@@ -17,7 +17,7 @@ from glob import glob
 ########## Configuration ####################
 # Specify your config file
 #TODO: replace with the path to your oci-cli config file
-configfile = '~/config'
+configfile = '~/.oci/config'
 
 # Specify your profile name
 # This Script assumes the profile name in the config file is DEFAULT but that can be changed here
@@ -37,7 +37,7 @@ target_region_names = []
 
 config = oci.config.from_file(configfile, profile)
 tenancy_id = config['tenancy']
-zipname = 'backup' + date.today().strftime('%d_%m_%Y') #TODO: for different end zip file name (currently "backup{today's date}.zip")
+zipname = 'QBData' + date.today().strftime('%d_%m_%Y') + '.zip' #TODO: replace with desired zip file name
 
 signer = Signer(
     tenancy = config['tenancy'],
@@ -49,14 +49,15 @@ signer = Signer(
 
 object_storage = oci.object_storage.ObjectStorageClient(config)
 namespace = object_storage.get_namespace().data # This gets the default namespace for the tenancy but can be changed to a specific namespace
-bucket = '' #TODO: replace with bucket name 
-file_path = "~/" + zipname #TODO: replace with desired file path for zip file
-current_folder = '~/test' #TODO: replace with the path to folder to zip
+bucket = 'rahul-bucket' #TODO: replace with bucket name 
+file_path = "/Users/rrtasker/" + zipname #TODO: replace with desired FULL file path for zip file
+current_folder = '/Users/rrtasker/test' #TODO: replace with the FULL path to folder to zip
 
 def zipdir(path, ziph):
-    for root, dirs, files in os.walk(path):
+    print(os.walk(path, topdown = True))
+    for root, dirs, files in os.walk(path, topdown = True):
         for file in files:
-            ziph.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), 'Y:\\'))
+            ziph.write(os.path.join(path, file), os.path.relpath(os.path.join(root, file), file_path))
 
 def login(config, signer):
     identity = oci.identity.IdentityClient(config, signer=signer)
@@ -84,13 +85,13 @@ def upload_to_object_storage(config, namespace, bucket, path):
                             in_file)
         print("Finished uploading {}".format(name))
 
-print ("\n===========================[ Zip File ]=============================")
-zipf = zipfile.ZipFile('zipname', 'w', zipfile.ZIP_DEFLATED)
+print ("\n===========================[ Zipping File... ]=============================")
+zipf = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
 zipdir(current_folder, zipf)
-zip_file.close()
+zipf.close()
+os.rename(os.getcwd()+'/'+zipname, file_path)
 print ("\n===========================[ Login check ]=============================")
 login(config, signer)
-print ("\n===========================[ Upload check ]=============================")
-# TODO: replace namespace, bucket and path
+print ("\n===========================[ Uploading... ]=============================")
 upload_to_object_storage(config, namespace, bucket, file_path)
-print ("\n===========================[ Upload Coomplete! ]=============================")
+print ("\n===========================[ Upload Complete! ]=============================")
