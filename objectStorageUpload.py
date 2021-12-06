@@ -48,16 +48,18 @@ signer = Signer(
     )
 
 object_storage = oci.object_storage.ObjectStorageClient(config)
-namespace = object_storage.get_namespace().data # This gets the default namespace for the tenancy but can be changed to a specific namespace
-bucket = 'rahul-bucket' #TODO: replace with bucket name 
-file_path = "/Users/rrtasker/" + zipname #TODO: replace with desired FULL file path for zip file
-current_folder = '/Users/rrtasker/test' #TODO: replace with the FULL path to folder to zip
+namespace = 'orasenatdpltintegration01' #object_storage.get_namespace().data     # This gets the default namespace for the tenancy but can be changed to a specific namespace
+bucket = 'rahul-bucket'                             # TODO: replace with bucket name 
+file_path = "/Users/rrtasker/" + zipname            # TODO: replace with desired FULL file path for zip file
+current_folder = '/Users/rrtasker/test'             # TODO: replace with the FULL path to folder to zip
 
-def zipdir(path, ziph):
-    print(os.walk(path, topdown = True))
-    for root, dirs, files in os.walk(path, topdown = True):
+def zipfolder(foldername, target_dir):            
+    zipobj = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
+    rootlen = len(target_dir) + 1
+    for base, dirs, files in os.walk(target_dir):
         for file in files:
-            ziph.write(os.path.join(path, file), os.path.relpath(os.path.join(root, file), file_path))
+            fn = os.path.join(base, file)
+            zipobj.write(fn, fn[rootlen:])
 
 def login(config, signer):
     identity = oci.identity.IdentityClient(config, signer=signer)
@@ -86,9 +88,7 @@ def upload_to_object_storage(config, namespace, bucket, path):
         print("Finished uploading {}".format(name))
 
 print ("\n===========================[ Zipping File... ]=============================")
-zipf = zipfile.ZipFile(zipname, 'w', zipfile.ZIP_DEFLATED)
-zipdir(current_folder, zipf)
-zipf.close()
+zipfolder(zipname, current_folder)
 os.rename(os.getcwd()+'/'+zipname, file_path)
 print ("\n===========================[ Login check ]=============================")
 login(config, signer)
